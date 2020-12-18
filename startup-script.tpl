@@ -16,25 +16,18 @@ exec 1>$npipe
 exec 2>&1
 
 
-BIGIP_USERNAME='${bigip_username}'
-BIGIP_PASSWORD='${bigip_password}'
-
-# Adding bigip user and password 
-
-user_status=`tmsh list auth user $BIGIP_USERNAME`
-if [[ $user_status != "" ]]; then
-   response_status=`tmsh modify auth user $BIGIP_USERNAME password $BIGIP_PASSWORD`
-   echo "Response Code for setting user and password:$response_status"
-fi
-if [[ $user_status == "" ]]; then
-   response_status=`tmsh create auth user $BIGIP_USERNAME password $BIGIP_PASSWORD partition-access add { all-partitions { role admin } }`
-   echo "Response Code for setting user and password:$response_status"
-fi
-
 ### write_files:
 # Download or Render BIG-IP Runtime Init Config 
 cat << 'EOF' > /config/cloud/runtime-init-conf.yaml
-runtime_parameters: []
+
+runtime_parameters:
+  - name: ADMIN_PASS
+    type: secret
+    secretProvider:
+      environment: azure
+      type: KeyVault
+      vaultUrl: https://my-keyvault.vault.azure.net
+      secretId: ${secret_id}
 pre_onboard_enabled:
   - name: provision_rest
     type: inline
@@ -50,6 +43,8 @@ extension_packages:
           extensionVersion: 3.23.0
         - extensionType: ts
           extensionVersion: 1.12.0
+        - extensionType: cf
+          extensionVersion: 1.6.1
 extension_services:
     service_operations: []
 post_onboard_enabled: []
