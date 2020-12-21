@@ -26,4 +26,26 @@ variable instance_count {
   default     = 1
 }
 
+variable az_key_vault_authentication {
+  description = "Whether to use key vault to pass authentication"
+  type        = bool
+  default     = true
+}
 
+variable azure_secret_rg {
+  description = "The name of the resource group in which the resources will be created"
+  type        = string
+  default     = "RaviKeyvalrg"
+}
+
+variable azure_keyvault_name {
+  description = "The name of the resource group in which the resources will be created"
+  type        = string
+  default     = "RaviKeyVal"
+}
+
+variable azure_keyvault_secret_name {
+  description = "The name of the resource group in which the resources will be created"
+  type        = string
+  default     = "RaviKeyValSec"
+}
