@@ -17,8 +17,8 @@ variable resource_group_name {
 variable mgmt_subnet_ids {
   description = "List of maps of subnetids of the virtual network where the virtual machines will reside."
   type = list(object({
-    subnet_id = string
-    public_ip = bool
+    subnet_id          = string
+    public_ip          = bool
     private_ip_primary = string
   }))
   default = [{ "subnet_id" = null, "public_ip" = null, "private_ip_primary" = null }]
@@ -27,9 +27,9 @@ variable mgmt_subnet_ids {
 variable external_subnet_ids {
   description = "List of maps of subnetids of the virtual network where the virtual machines will reside."
   type = list(object({
-    subnet_id = string
-    public_ip = bool
-    private_ip_primary = string
+    subnet_id            = string
+    public_ip            = bool
+    private_ip_primary   = string
     private_ip_secondary = string
   }))
   default = [{ "subnet_id" = null, "public_ip" = null, "private_ip_primary" = null, "private_ip_secondary" = null }]
@@ -38,8 +38,8 @@ variable external_subnet_ids {
 variable internal_subnet_ids {
   description = "List of maps of subnetids of the virtual network where the virtual machines will reside."
   type = list(object({
-    subnet_id = string
-    public_ip = bool
+    subnet_id          = string
+    public_ip          = bool
     private_ip_primary = string
   }))
   default = [{ "subnet_id" = null, "public_ip" = null, "private_ip_primary" = null }]
@@ -142,7 +142,7 @@ variable fastPackageUrl {
   description = "URL to download the BIG-IP FAST module"
   type        = string
   //default     = ""
-  default     = "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.4.0/f5-appsvcs-templates-1.4.0-1.noarch.rpm"
+  default = "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.4.0/f5-appsvcs-templates-1.4.0-1.noarch.rpm"
 }
 
 ## Please check and update the latest Failover Extension URL from https://github.com/F5Networks/f5-cloud-failover-extension/releases/latest 
@@ -151,7 +151,7 @@ variable cfePackageUrl {
   description = "URL to download the BIG-IP Cloud Failover Extension module"
   type        = string
   //default     = ""
-  default     = "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.6.1/f5-cloud-failover-1.6.1-1.noarch.rpm"
+  default = "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.6.1/f5-cloud-failover-1.6.1-1.noarch.rpm"
 }
 
 variable libs_dir {
@@ -172,6 +172,12 @@ variable availabilityZones {
 }
 
 variable azure_secret_rg {
+  description = "The name of the resource group in which the Azure Key Vault exists"
+  type        = string
+  default     = ""
+}
+
+variable azure_managed_identity {
   description = "The name of the resource group in which the Azure Key Vault exists"
   type        = string
   default     = ""
