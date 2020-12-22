@@ -27,7 +27,7 @@ module bigip {
   prefix                      = format("%s-1nic", var.prefix)
   resource_group_name         = azurerm_resource_group.rg.name
   az_key_vault_authentication = var.az_key_vault_authentication
-  azure_secret_rg             = var.az_key_vault_authentication ? azurerm_resource_group.rgkeyvault.name : ""
+  azure_secret_rg             = var.az_key_vault_authentication ? azurerm_resource_group.rg.name : ""
   azure_keyvault_name         = var.az_key_vault_authentication ? azurerm_key_vault.azkv.name : ""
   azure_keyvault_secret_name  = var.az_key_vault_authentication ? azurerm_key_vault_secret.azkvsec.name : ""
   azure_managed_identity      = azurerm_user_assigned_identity.user_identity.id

@@ -1,3 +1,5 @@
+data "azurerm_subscription" "current" {
+}
 data "azurerm_client_config" "current" {
 }
 
@@ -19,11 +21,16 @@ resource "azurerm_user_assigned_identity" "user_identity" {
   location            = azurerm_resource_group.rg.location
 }
 
+resource "azurerm_role_assignment" "test" {
+  scope                = data.azurerm_subscription.current.id
+  role_definition_name = "Reader"
+  principal_id         = azurerm_user_assigned_identity.user_identity.principal_id
+}
 
 resource azurerm_key_vault azkv {
   name                        = format("%s-%s", var.azure_keyvault_name, random_id.id.hex)
-  location                    = azurerm_resource_group.rgkeyvault.location
-  resource_group_name         = azurerm_resource_group.rgkeyvault.name
+  location                    = azurerm_resource_group.rg.location
+  resource_group_name         = azurerm_resource_group.rg.name
   enabled_for_disk_encryption = true
   tenant_id                   = data.azurerm_client_config.current.tenant_id
   soft_delete_enabled         = true
