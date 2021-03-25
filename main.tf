@@ -283,22 +283,22 @@ data "template_file" "init_file" {
 }
 
 
-
+# TODO Talentsoft: we should not create a public IP
 # Create a Public IP for bigip
-resource "azurerm_public_ip" "mgmt_public_ip" {
-  count               = length(local.bigip_map["mgmt_subnet_ids"])
-  name                = "${local.instance_prefix}-pip-mgmt-${count.index}"
-  location            = data.azurerm_resource_group.bigiprg.location
-  resource_group_name = data.azurerm_resource_group.bigiprg.name
-  domain_name_label   = format("%s-mgmt-%s", local.instance_prefix, count.index)
-  allocation_method   = "Static"   # Static is required due to the use of the Standard sku
-  sku                 = "Standard" # the Standard sku is required due to the use of availability zones
-  zones               = var.availabilityZones
-  tags = {
-    Name   = "${local.instance_prefix}-pip-mgmt-${count.index}"
-    source = "terraform"
-  }
-}
+//resource "azurerm_public_ip" "mgmt_public_ip" {
+//  count               = length(local.bigip_map["mgmt_subnet_ids"])
+//  name                = "${local.instance_prefix}-pip-mgmt-${count.index}"
+//  location            = data.azurerm_resource_group.bigiprg.location
+//  resource_group_name = data.azurerm_resource_group.bigiprg.name
+//  domain_name_label   = format("%s-mgmt-%s", local.instance_prefix, count.index)
+//  allocation_method   = "Static"   # Static is required due to the use of the Standard sku
+//  sku                 = "Standard" # the Standard sku is required due to the use of availability zones
+//  zones               = var.availabilityZones
+//  tags = {
+//    Name   = "${local.instance_prefix}-pip-mgmt-${count.index}"
+//    source = "terraform"
+//  }
+//}
 
 resource "azurerm_public_ip" "external_public_ip" {
   count               = length(local.external_public_subnet_id)
@@ -345,9 +345,9 @@ resource "azurerm_network_interface" "mgmt_nic" {
   ip_configuration {
     name                          = "${local.instance_prefix}-mgmt-ip-${count.index}"
     subnet_id                     = local.bigip_map["mgmt_subnet_ids"][count.index]["subnet_id"]
-    private_ip_address_allocation = ( length(local.mgmt_public_private_ip_primary[count.index]) > 0 ? "Static" : "Dynamic" )
-    private_ip_address		  = ( length(local.mgmt_public_private_ip_primary[count.index]) > 0 ? local.mgmt_public_private_ip_primary[count.index] : null )
-    public_ip_address_id          = local.bigip_map["mgmt_subnet_ids"][count.index]["public_ip"] ? azurerm_public_ip.mgmt_public_ip[count.index].id : ""
+    private_ip_address_allocation = ( length(local.mgmt_private_ip_primary[count.index]) > 0 ? "Static" : "Dynamic" )
+    private_ip_address		        = ( length(local.mgmt_private_ip_primary[count.index]) > 0 ? local.mgmt_private_ip_primary[count.index] : null )
+    # public_ip_address_id          = local.bigip_map["mgmt_subnet_ids"][count.index]["public_ip"] ? azurerm_public_ip.mgmt_public_ip[count.index].id : ""
   }
   tags = {
     Name   = "${local.instance_prefix}-mgmt-nic-${count.index}"
@@ -367,7 +367,7 @@ resource "azurerm_network_interface" "external_nic" {
     subnet_id                     = local.external_private_subnet_id[count.index]
     primary                       = "true"
     private_ip_address_allocation = ( length(local.external_private_ip_primary[count.index]) > 0 ? "Static" : "Dynamic" )
-    private_ip_address		  = ( length(local.external_private_ip_primary[count.index]) > 0 ? local.external_private_ip_primary[count.index] : null )
+    private_ip_address		        = ( length(local.external_private_ip_primary[count.index]) > 0 ? local.external_private_ip_primary[count.index] : null )
     //public_ip_address_id          = length(azurerm_public_ip.mgmt_public_ip.*.id) > count.index ? azurerm_public_ip.mgmt_public_ip[count.index].id : ""
   }
   ip_configuration {
@@ -522,7 +522,6 @@ resource "azurerm_virtual_machine" "f5vm01" {
     identity_ids = [azurerm_user_assigned_identity.user_identity.id]
   }
 
-
   depends_on = [azurerm_network_interface_security_group_association.mgmt_security, azurerm_network_interface_security_group_association.internal_security, azurerm_network_interface_security_group_association.external_security, azurerm_network_interface_security_group_association.external_public_security]
 }
 
@@ -542,19 +541,19 @@ publisher            = "Microsoft.OSTCExtensions"
 SETTINGS
 }
 
-# Getting Public IP Assigned to BIGIP
-data "azurerm_public_ip" "f5vm01mgmtpip" {
-  //   //count               = var.nb_public_ip
-  name                = azurerm_public_ip.mgmt_public_ip[0].name
-  resource_group_name = data.azurerm_resource_group.bigiprg.name
-  depends_on          = [azurerm_virtual_machine.f5vm01, azurerm_virtual_machine_extension.vmext,azurerm_public_ip.mgmt_public_ip[0]]
-}
+//# Getting Public IP Assigned to BIGIP
+//data "azurerm_public_ip" "f5vm01mgmtpip" {
+//  //   //count               = var.nb_public_ip
+//  name                = azurerm_public_ip.mgmt_public_ip[0].name
+//  resource_group_name = data.azurerm_resource_group.bigiprg.name
+//  depends_on          = [azurerm_virtual_machine.f5vm01, azurerm_virtual_machine_extension.vmext,azurerm_public_ip.mgmt_public_ip[0]]
+//}
 
 data "template_file" "clustermemberDO1" {
   count    = local.total_nics == 1 ? 1 : 0
   template = file("${path.module}/onboard_do_1nic.tpl")
   vars = {
-    hostname      = data.azurerm_public_ip.f5vm01mgmtpip.fqdn
+    hostname      = var.fqdn # data.azurerm_public_ip.f5vm01mgmtpip.fqdn
     name_servers  = join(",", formatlist("\"%s\"", ["169.254.169.253"]))
     search_domain = "f5.com"
     ntp_servers   = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
@@ -565,7 +564,7 @@ data "template_file" "clustermemberDO2" {
   count    = local.total_nics == 2 ? 1 : 0
   template = file("${path.module}/onboard_do_2nic.tpl")
   vars = {
-    hostname      = data.azurerm_public_ip.f5vm01mgmtpip.fqdn
+    hostname      = var.fqdn # data.azurerm_public_ip.f5vm01mgmtpip.fqdn
     name_servers  = join(",", formatlist("\"%s\"", ["169.254.169.253"]))
     search_domain = "f5.com"
     ntp_servers   = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
@@ -580,7 +579,7 @@ data "template_file" "clustermemberDO3" {
   count    = local.total_nics == 3 ? 1 : 0
   template = file("${path.module}/onboard_do_3nic.tpl")
   vars = {
-    hostname      = data.azurerm_public_ip.f5vm01mgmtpip.fqdn
+    hostname      = var.fqdn # data.azurerm_public_ip.f5vm01mgmtpip.fqdn
     name_servers  = join(",", formatlist("\"%s\"", ["169.254.169.253"]))
     search_domain = "f5.com"
     ntp_servers   = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
@@ -591,4 +590,17 @@ data "template_file" "clustermemberDO3" {
     gateway       = join(".", concat(slice(split(".",local.gw_bytes_nic),0,3),[1]) )
   }
   depends_on = [azurerm_network_interface.external_nic, azurerm_network_interface.external_public_nic, azurerm_network_interface.internal_nic]
+}
+
+
+resource "local_file" "debug_init_file" {
+  count             = var.debug_custom_data ? 1 : 0
+  sensitive_content = data.template_file.init_file[0].rendered
+  filename          = "output/debug_init-${var.prefix}"
+}
+
+resource "local_file" "debug_DO3" {
+  count             = var.debug_custom_data ? 1 : 0
+  sensitive_content = data.template_file.clustermemberDO3[0].rendered
+  filename          = "output/debug_do3-${var.prefix}"
 }
