@@ -232,6 +232,26 @@ These variables have default values and don't have to be set to use this module.
 NOTE: A local json file will get generated which contains the DO declaration (for 1,2,3 nics as provided in the examples )
 ```
 
+
+### Accept Azure Marketplace legal terms
+
+In order to use the images published by F5, you must accept the legal terms associated on every subscription where the images are deployed. You only need to do this once per subscription.
+
+The following commands can be used to accept the terms (may need to adapt )
+
+```sh
+$SubscriptionName = "mysubscription"
+$MarketPlaceOfferName = "f5-big-all-2slot-byol" # adapt this to the type of license you use
+
+$CliendId = "xxxx-xxxx-xxxx-xxxx"
+$ClientSecretId = ConvertTo-SecureString -String "xxxxxxxxxxxxxxxxxxxx" -AsPlainText -Force
+$Credential = new-object -typename System.Management.Automation.PSCredential -argumentlist $CliendId, $ClientSecretId
+Connect-AzAccount -Credential $Credential -Tenant "xxxx-xxxx-xxxx-xxxx" -ServicePrincipal
+Select-AzSubscription -SubscriptionName $SubscriptionName
+Get-AzMarketplaceTerms -Publisher "f5-networks" -Product "f5-big-ip-byol" -Name $MarketPlaceOfferName | Set-AzMarketplaceTerms -Accept
+```
+
+
 ## Support Information
 
 This repository is community-supported. Follow instructions below on how to raise issues.
