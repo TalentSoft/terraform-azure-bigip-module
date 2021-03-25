@@ -199,6 +199,11 @@ variable azure_keyvault_secret_name {
   default     = ""
 }
 
+variable debug_custom_data {
+  description = "Set to true in order to produce a local copy of the template files"
+  type        = bool
+  default     = false
+}
 
 variable fqdn {
   description = "FQDN, used in the DO scripts"

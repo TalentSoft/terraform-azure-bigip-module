@@ -522,7 +522,6 @@ resource "azurerm_virtual_machine" "f5vm01" {
     identity_ids = [azurerm_user_assigned_identity.user_identity.id]
   }
 
-
   depends_on = [azurerm_network_interface_security_group_association.mgmt_security, azurerm_network_interface_security_group_association.internal_security, azurerm_network_interface_security_group_association.external_security, azurerm_network_interface_security_group_association.external_public_security]
 }
 
@@ -591,4 +590,17 @@ data "template_file" "clustermemberDO3" {
     gateway       = join(".", concat(slice(split(".",local.gw_bytes_nic),0,3),[1]) )
   }
   depends_on = [azurerm_network_interface.external_nic, azurerm_network_interface.external_public_nic, azurerm_network_interface.internal_nic]
+}
+
+
+resource "local_file" "debug_init_file" {
+  count             = var.debug_custom_data ? 1 : 0
+  sensitive_content = data.template_file.init_file[0].rendered
+  filename          = "output/debug_init-${var.prefix}"
+}
+
+resource "local_file" "debug_DO3" {
+  count             = var.debug_custom_data ? 1 : 0
+  sensitive_content = data.template_file.clustermemberDO3[0].rendered
+  filename          = "output/debug_do3-${var.prefix}"
 }
