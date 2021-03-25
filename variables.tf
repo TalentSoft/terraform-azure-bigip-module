@@ -199,3 +199,9 @@ variable azure_keyvault_secret_name {
   default     = ""
 }
 
+
+variable fqdn {
+  description = "FQDN, used in the DO scripts"
+  type        = string
+  default     = ""
+}
